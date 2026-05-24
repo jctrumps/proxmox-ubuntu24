@@ -1,0 +1,10 @@
+#cloud-config
+hostname: ubuntu-2404-template-test
+manage_etc_hosts: true
+users:
+  - default
+package_update: true
+packages:
+  - qemu-guest-agent
+runcmd:
+  - systemctl enable --now qemu-guest-agent

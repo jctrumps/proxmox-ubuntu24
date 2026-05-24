@@ -1,0 +1,12 @@
+config/template.env
+*.token
+*.secret
+*.key
+id_*
+images/
+*.img
+*.qcow2
+*.raw
+.DS_Store
+.vscode/
+.idea/
