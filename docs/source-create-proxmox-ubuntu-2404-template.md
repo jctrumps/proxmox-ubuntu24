@@ -27,6 +27,7 @@ Official source:
 - Use `local-lvm` for the template disk and cloud-init disk
 - Do not rely on NFS for the template conversion step unless you have confirmed the backend supports the required Proxmox file operations
 - Prefer downloading the original Ubuntu cloud image directly on the Proxmox node for the first template build instead of relying on a storage-converted `.img.raw` copy
+- Require explicit opt-in before using anything except `local-lvm` in this repo
 
 In this project, template conversion on NFS failed because the underlying storage did not support the `chattr` operation Proxmox attempted during template conversion.
 
@@ -38,9 +39,9 @@ Create an empty VM shell in the Proxmox UI.
 
 Recommended settings:
 
-- VM ID: `9000`
-- Name: `ubuntu-2404-cloud-template`
-- SCSI controller: `VirtIO SCSI`
+- VM ID: `9024`
+- Name: `ubuntu-2404-cloudinit`
+- SCSI controller: `VirtIO SCSI Single`
 - Network model: `VirtIO`
 - Bridge: your target bridge such as `vmbr0`
 - CPU cores: `2`
@@ -55,7 +56,7 @@ Keep:
 
 - CPU and memory settings
 - network interface
-- `VirtIO SCSI` controller
+- `VirtIO SCSI Single` controller
 
 ## Import The Cloud Image
 
@@ -64,18 +65,21 @@ Use the Proxmox node shell.
 Proven command sequence:
 
 ```bash
-qm destroy 9000 --purge
-cd /root
+qm destroy 9024 --purge
+mkdir -p /root/proxmox-cloud-images
+cd /root/proxmox-cloud-images
 wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-qm create 9000 --name ubuntu-2404-cloud-template --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-pci --bios ovmf --machine q35
-qm set 9000 --scsi0 local-lvm:0,import-from=./noble-server-cloudimg-amd64.img
-qm resize 9000 scsi0 30G
-qm set 9000 --efidisk0 local-lvm:0,pre-enrolled-keys=0
-qm set 9000 --ide2 local-lvm:cloudinit
-qm set 9000 --boot order=scsi0
-qm set 9000 --ciuser ubuntu
-qm start 9000
+qm create 9024 --name ubuntu-2404-cloudinit --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-single --bios ovmf --machine q35
+qm set 9024 --scsi0 local-lvm:0,import-from=/root/proxmox-cloud-images/noble-server-cloudimg-amd64.img,iothread=1
+qm resize 9024 scsi0 30G
+qm set 9024 --efidisk0 local-lvm:0,pre-enrolled-keys=0
+qm set 9024 --ide2 local-lvm:cloudinit
+qm set 9024 --boot order=scsi0
+qm set 9024 --ciuser ubuntu
+qm start 9024
 ```
+
+In this repo, `local-lvm` is the only allowed template-build storage by default. Set `ALLOW_UNSAFE_STORAGE=true` only after you verify another backend is safe for Proxmox template conversion.
 
 ## UEFI Boot Guidance
 
@@ -108,13 +112,13 @@ If the guest falls into the UEFI shell, PXE, or `no boot device`, treat that as 
 Optional SSH key injection on the template definition:
 
 ```bash
-qm set 9000 --sshkey /root/.ssh/id_ed25519.pub
+qm set 9024 --sshkey /root/your-public-key.pub
 ```
 
 Optional serial console configuration for later troubleshooting:
 
 ```bash
-qm set 9000 --serial0 socket --vga serial0
+qm set 9024 --serial0 socket --vga serial0
 ```
 
 ## Convert To Template
@@ -126,8 +130,8 @@ Before conversion, boot-test the VM once and confirm the guest is actually boota
 After validation:
 
 ```bash
-qm shutdown 9000
-qm template 9000
+qm shutdown 9024
+qm template 9024
 ```
 
 In the UI:
@@ -140,7 +144,7 @@ In the UI:
 Shell alternative:
 
 ```bash
-qm template 9000
+qm template 9024
 ```
 
 ## Validation
@@ -148,13 +152,15 @@ qm template 9000
 Confirm the template state:
 
 ```bash
-qm config 9000
+qm config 9024
 ```
 
 The config should include:
 
 - `template: 1`
 - `scsi0` on `local-lvm`
+- `scsihw: virtio-scsi-single`
+- `scsi0` with `iothread=1`
 - `ide2` cloud-init drive
 - `ciuser: ubuntu`
 
@@ -162,7 +168,7 @@ A successful manual boot test here proves template bootability only. It does not
 
 ## Notes
 
-- Reserve the `9000` range for templates if possible
+- Reserve a stable VMID for templates if possible
 - Use a different VM ID for actual cloned VMs, such as `2100`
 - Record the template VM ID for `template_vm_id` in `terraform.tfvars`
 - If a clone reports `no boot device`, rebuild or correct the template first instead of patching clones one by one

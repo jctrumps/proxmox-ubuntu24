@@ -9,11 +9,13 @@ This repository stays focused on template creation only. Future OpenTofu and Ans
 | Setting | Value |
 |---|---|
 | VMID | `9024` |
-| Template name | `ubuntu-2404-cloud-template` |
+| Template name | `ubuntu-2404-cloudinit` |
 | Image | `noble-server-cloudimg-amd64.img` |
-| Storage | `local-lvm` |
+| Storage | `local-lvm` by default |
 | Bridge | `vmbr0` |
 | Cloud-init user | `ubuntu` |
+
+This workflow defaults to `local-lvm` for template creation. Other storage backends require `ALLOW_UNSAFE_STORAGE=true` because template conversion already failed on NFS-backed storage in this repo.
 
 ## Quick Start
 
@@ -42,3 +44,5 @@ Then convert it:
 ```bash
 ./scripts/convert-to-template.sh
 ```
+
+The imported boot disk uses `VirtIO SCSI Single` with `iothread=1`.

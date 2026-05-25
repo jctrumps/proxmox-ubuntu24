@@ -33,34 +33,27 @@ Datastore.Audit Mapping.Audit Pool.Audit SDN.Audit Sys.Audit VM.Audit VM.GuestAg
 |---|---|---|
 | `/` | `workbench@pve` | `PVEAuditor` |
 | `/nodes` | `automation@pve` | `DevOpsProvisioner` |
-| `/nodes/pve-minibox-01` | `automation@pve` | `DevOpsProvisioner` |
 | `/sdn/zones` | `automation@pve` | `DevOpsProvisioner` |
 | `/storage` | `automation@pve` | `DevOpsProvisioner` |
-| `/storage/local` | `automation@pve` | `DevOpsProvisioner` |
-| `/storage/local-lvm` | `automation@pve` | `DevOpsProvisioner` |
-| `/storage/mycloudpr2100` | `automation@pve` | `DevOpsProvisioner` |
 | `/vms` | `automation@pve` | `DevOpsProvisioner` |
+
+Optional node/storage-specific ACLs should only be added when you explicitly set the matching variables before running `scripts/setup-proxmox-automation-access.sh`:
+
+- `NODE_NAME`
+- `LOCAL_STORAGE_NAME`
+- `TEMPLATE_STORAGE_NAME`
+- `EXTRA_STORAGE_NAME`
 
 ## Optional Shell Setup
 
-Review and adjust node/storage names before running:
+Review and set optional node/storage variables before running. Leave a variable unset to skip that node- or storage-specific ACL:
 
 ```bash
-pveum user add automation@pve --comment "Automation user for OpenTofu and Ansible"
-pveum user add workbench@pve --comment "Read-only workbench/audit user"
-
-pveum role add DevOpsProvisioner -privs "Datastore.AllocateSpace Datastore.Audit Pool.Allocate SDN.Use Sys.Audit VM.Allocate VM.Audit VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.GuestAgent.Audit VM.Migrate VM.PowerMgmt"
-pveum role add PVEAuditor -privs "Datastore.Audit Mapping.Audit Pool.Audit SDN.Audit Sys.Audit VM.Audit VM.GuestAgent.Audit"
-
-pveum acl modify / -user workbench@pve -role PVEAuditor
-pveum acl modify /nodes -user automation@pve -role DevOpsProvisioner
-pveum acl modify /nodes/pve-minibox-01 -user automation@pve -role DevOpsProvisioner
-pveum acl modify /sdn/zones -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage/local -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage/local-lvm -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage/mycloudpr2100 -user automation@pve -role DevOpsProvisioner
-pveum acl modify /vms -user automation@pve -role DevOpsProvisioner
+NODE_NAME="pve-node-name" \
+LOCAL_STORAGE_NAME="local" \
+TEMPLATE_STORAGE_NAME="local-lvm" \
+EXTRA_STORAGE_NAME="shared-storage" \
+./scripts/setup-proxmox-automation-access.sh
 ```
 
 ## API Tokens

@@ -22,6 +22,13 @@ source "${CONFIG_FILE}"
 : "${BRIDGE:?BRIDGE is required}"
 : "${CIUSER:?CIUSER is required}"
 
+if [[ "${STORAGE}" != "local-lvm" && "${ALLOW_UNSAFE_STORAGE:-false}" != "true" ]]; then
+  echo "Refusing to build on storage '${STORAGE}'."
+  echo "This workflow only allows STORAGE=local-lvm by default because some backends fail during template conversion."
+  echo "Set ALLOW_UNSAFE_STORAGE=true in config/template.env only after you verify the backend is safe for Proxmox templates."
+  exit 1
+fi
+
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this on the Proxmox node as root."
   exit 1
@@ -52,9 +59,9 @@ else
 fi
 
 echo "Creating VM ${TEMPLATE_VMID} (${TEMPLATE_NAME})"
-qm create "${TEMPLATE_VMID}"   --name "${TEMPLATE_NAME}"   --memory "${MEMORY_MB}"   --cores "${CORES}"   --net0 "virtio,bridge=${BRIDGE}"   --scsihw virtio-scsi-pci   --bios ovmf   --machine q35
+qm create "${TEMPLATE_VMID}"   --name "${TEMPLATE_NAME}"   --memory "${MEMORY_MB}"   --cores "${CORES}"   --net0 "virtio,bridge=${BRIDGE}"   --scsihw virtio-scsi-single   --bios ovmf   --machine q35
 
-qm set "${TEMPLATE_VMID}" --scsi0 "${STORAGE}:0,import-from=${IMAGE_PATH}"
+qm set "${TEMPLATE_VMID}" --scsi0 "${STORAGE}:0,import-from=${IMAGE_PATH},iothread=1"
 qm resize "${TEMPLATE_VMID}" scsi0 "${DISK_SIZE}"
 qm set "${TEMPLATE_VMID}" --efidisk0 "${STORAGE}:0,pre-enrolled-keys=0"
 qm set "${TEMPLATE_VMID}" --ide2 "${STORAGE}:cloudinit"

@@ -9,6 +9,8 @@ fi
 
 ${SUDO} apt update
 ${SUDO} apt install -y qemu-guest-agent
-${SUDO} systemctl enable qemu-guest-agent
-${SUDO} cloud-init clean --logs
+${SUDO} systemctl start qemu-guest-agent
+systemctl is-active qemu-guest-agent
+${SUDO} cloud-init clean --logs --machine-id
+${SUDO} rm -f /etc/ssh/ssh_host_*
 ${SUDO} shutdown now

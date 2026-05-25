@@ -7,4 +7,5 @@ package_update: true
 packages:
   - qemu-guest-agent
 runcmd:
-  - systemctl enable --now qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - systemctl is-active qemu-guest-agent

@@ -5,7 +5,7 @@ Future OpenTofu and Ansible projects should treat this template as:
 | Setting | Value |
 |---|---|
 | Template VMID | `9024` |
-| Template name | `ubuntu-2404-cloud-template` |
+| Template name | `ubuntu-2404-cloudinit` |
 | Cloud-init user | `ubuntu` |
 | Guest agent | enabled and installed |
 

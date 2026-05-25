@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-NODE_NAME="${NODE_NAME:-pve-minibox-01}"
-EXTRA_STORAGE="${EXTRA_STORAGE:-mycloudpr2100}"
+NODE_NAME="${NODE_NAME:-}"
+LOCAL_STORAGE_NAME="${LOCAL_STORAGE_NAME:-}"
+TEMPLATE_STORAGE_NAME="${TEMPLATE_STORAGE_NAME:-}"
+EXTRA_STORAGE_NAME="${EXTRA_STORAGE_NAME:-}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this on the Proxmox node as root."
@@ -26,13 +28,25 @@ pveum role add PVEAuditor -privs "${AUDITOR_PRIVS}" 2>/dev/null || pveum role mo
 pveum acl modify / -user workbench@pve -role PVEAuditor
 
 pveum acl modify /nodes -user automation@pve -role DevOpsProvisioner
-pveum acl modify "/nodes/${NODE_NAME}" -user automation@pve -role DevOpsProvisioner
 pveum acl modify /sdn/zones -user automation@pve -role DevOpsProvisioner
 pveum acl modify /storage -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage/local -user automation@pve -role DevOpsProvisioner
-pveum acl modify /storage/local-lvm -user automation@pve -role DevOpsProvisioner
-pveum acl modify "/storage/${EXTRA_STORAGE}" -user automation@pve -role DevOpsProvisioner
 pveum acl modify /vms -user automation@pve -role DevOpsProvisioner
+
+if [[ -n "${NODE_NAME}" ]]; then
+  pveum acl modify "/nodes/${NODE_NAME}" -user automation@pve -role DevOpsProvisioner
+fi
+
+if [[ -n "${LOCAL_STORAGE_NAME}" ]]; then
+  pveum acl modify "/storage/${LOCAL_STORAGE_NAME}" -user automation@pve -role DevOpsProvisioner
+fi
+
+if [[ -n "${TEMPLATE_STORAGE_NAME}" ]]; then
+  pveum acl modify "/storage/${TEMPLATE_STORAGE_NAME}" -user automation@pve -role DevOpsProvisioner
+fi
+
+if [[ -n "${EXTRA_STORAGE_NAME}" ]]; then
+  pveum acl modify "/storage/${EXTRA_STORAGE_NAME}" -user automation@pve -role DevOpsProvisioner
+fi
 
 echo "Users, roles, and ACLs are configured."
 echo "Create API tokens manually when needed."

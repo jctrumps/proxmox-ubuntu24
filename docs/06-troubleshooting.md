@@ -18,6 +18,8 @@ The earlier build failed when template conversion used NFS-backed storage becaus
 
 Use `local-lvm` for the initial template build unless you have confirmed your storage backend supports Proxmox's template conversion operations.
 
+The scripts now block non-`local-lvm` storage by default. To override that guard, set `ALLOW_UNSAFE_STORAGE=true` in `config/template.env` only after you verify the backend is safe for Proxmox template conversion.
+
 ## UEFI Shell / PXE / No Boot Device
 
 Confirm:
@@ -26,6 +28,8 @@ Confirm:
 - `machine: q35`
 - `efidisk0` exists
 - `scsi0` exists
+- SCSI controller is `virtio-scsi-single`
+- `scsi0` has `iothread=1`
 - boot order is `scsi0`
 
 ## Serial Console Is Blank

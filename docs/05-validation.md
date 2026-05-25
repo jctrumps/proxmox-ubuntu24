@@ -11,6 +11,8 @@ Expected:
 
 - `template: 1`
 - `scsi0` on `local-lvm`
+- `scsihw: virtio-scsi-single`
+- `scsi0` includes `iothread=1`
 - `ide2` cloud-init drive
 - `ciuser: ubuntu`
 - `agent: enabled=1`

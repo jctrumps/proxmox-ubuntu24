@@ -37,6 +37,13 @@ if ! pvesm status | awk '{print $1}' | grep -qx "${STORAGE}"; then
   exit 1
 fi
 
+if [[ "${STORAGE}" != "local-lvm" && "${ALLOW_UNSAFE_STORAGE:-false}" != "true" ]]; then
+  echo "Unsafe storage blocked: ${STORAGE}"
+  echo "This workflow only allows STORAGE=local-lvm by default because some backends fail during template conversion."
+  echo "Set ALLOW_UNSAFE_STORAGE=true in config/template.env only after you verify the backend is safe for Proxmox templates."
+  exit 1
+fi
+
 echo "Checking bridge: ${BRIDGE}"
 if ! ip link show "${BRIDGE}" >/dev/null 2>&1; then
   echo "Bridge not found: ${BRIDGE}"
