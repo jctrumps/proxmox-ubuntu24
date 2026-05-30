@@ -15,3 +15,4 @@
 - Removes hardcoded node and storage defaults from Proxmox automation access setup.
 - Renames the template from `ubuntu-2404-cloud-template` to `ubuntu-2404-cloudinit` before downstream adoption.
 - Confirms the updated `ubuntu-2404-cloudinit` template was validated successfully.
+- Reduces the default template disk size to `10G` for smaller local storage environments.

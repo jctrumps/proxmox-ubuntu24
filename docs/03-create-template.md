@@ -17,7 +17,7 @@ cd /root/proxmox-cloud-images
 wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 qm create 9024 --name ubuntu-2404-cloudinit --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-single --bios ovmf --machine q35
 qm set 9024 --scsi0 local-lvm:0,import-from=/root/proxmox-cloud-images/noble-server-cloudimg-amd64.img,iothread=1
-qm resize 9024 scsi0 20G
+qm resize 9024 scsi0 10G
 qm set 9024 --efidisk0 local-lvm:0,pre-enrolled-keys=0
 qm set 9024 --ide2 local-lvm:cloudinit
 qm set 9024 --boot order=scsi0
